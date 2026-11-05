@@ -42,8 +42,8 @@ public class BookingEntityTests
         var from = DateOnly.FromDateTime(DateTime.UtcNow.AddDays(-1)); // вчера
         var to = from.AddDays(3);
         var createdAt = DateTimeOffset.UtcNow.AddDays(-10);
-        var booking = CreateConfirmedBooking(from, to);
-
+        var booking = Booking.Create(1, 1, from, to,  createdAt);
+        booking.Confirm();
         var today = DateOnly.FromDateTime(DateTime.UtcNow);
         var act = () => booking.Cancel(today);
 
