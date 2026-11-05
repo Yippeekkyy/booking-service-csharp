@@ -89,18 +89,38 @@ public class Booking
                 // Бронирование ещё не подтверждено Catalog Service —
                 // отменяем немедленно, откат не нужен
                 Status = BookingStatus.Cancelled;
+                CancellationRequestedAt = null;
                 break;
 
-            case BookingStatus.None:
-            case BookingStatus.Cancelled:
+            case BookingStatus.Confirmed :
+                if (currentDate >= BookedFrom)
+                    throw new BusinessException(
+                        "Нельзя отменить уже начавшееся бронирование");
+
+                CancellationRequestedAt = DateTimeOffset.UtcNow;
+                Status = BookingStatus.CancellationPending;
+                break;
             default:
                 throw new BusinessException("Некорректный статус для отмены");
         }
     }
 
     // TODO: Task 01 — завершить отмену: CancellationPending → Cancelled
-    public void CompleteCancellation() => throw new NotImplementedException();
+    public void CompleteCancellation()
+    {
+        if (Status != BookingStatus.CancellationPending)
+            throw new BusinessException("Завершение отмены допустимо только из CancellationPending");
+        Status = BookingStatus.Cancelled;
+        CancellationRequestedAt = null;
+    }
 
     // TODO: Task 01 — откатить отмену: CancellationPending → Confirmed (при ошибке DLQ)
-    public void RollbackCancellation() => throw new NotImplementedException();
+    public void RollbackCancellation()
+    {
+        if (Status != BookingStatus.CancellationPending)
+            throw new BusinessException("Откат отмены допустим только из CancellationPending");
+        Status = BookingStatus.Confirmed;
+        CancellationRequestedAt = null;
+    }
+
 }
